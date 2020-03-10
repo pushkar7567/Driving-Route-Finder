@@ -16,6 +16,26 @@ void Digraph::addVertex(int v) {
   nbrs[v];
 }
 
+void Digraph::addEdge(int u, int v) {
+  addVertex(v);
+  nbrs[u].insert(v); // will also add u to nbrs if it was not there already
+}
+
+long long manhatten(const Point& pt1, const Point& pt2) {
+	long long mandist = abs((pt1.lat)-(pt2.lat)) + abs((pt1.lon)-(pt2.lon));
+	return mandist;
+}
+
+unordered_set<int>::const_iterator Digraph::neighbours(int v) const {
+  // this will crash the program if v is not a vertex
+  return nbrs.find(v)->second.begin();
+}
+
+unordered_set<int>::const_iterator Digraph::endIterator(int v) const {
+  // this will crash the program if v is not a vertex
+  return nbrs.find(v)->second.end();
+}
+
 void readGraph (string filename, WDigraph& graph, unordered_map<int, Point>& points) {
 	ifstream fin;
 	fin.open(filename);
@@ -66,28 +86,46 @@ void readGraph (string filename, WDigraph& graph, unordered_map<int, Point>& poi
 			stopEdge = stopEdge.substr(0, stopEdge.size());
 			l = stoi(startEdge);
 			m = stoi(stopEdge);
-			long long w = graph.getCost(l, m);
-			//cout << w << endl;
+			Point point1, point2;
+			point1 = points[l];
+			point2 = points[m];
+			long long cost_of_edge = manhatten(point1, point2);
+			graph.addEdge(l, m, cost_of_edge);
 		}
 	}
 	
 }
 
-long long manhatten(const Point& pt1, const Point& pt2) {
-	long long mandist = abs((pt1.lat)-(pt2.lat)) + abs((pt1.lon)-(pt2.lon));
-	return mandist;
-}
 
 void dijkstra(const WDigraph& graph, int startVertex, unordered_map<int, PIL>& tree) {
+	BinaryHeap<pair<int, int>, long long> events;
+	pair<int, int> startPair;
+	startPair.first = startVertex;
+	startPair.second = startVertex;
 
+	events.insert(startPair, 0);
+	while (events.size() > 0) {
+		HeapItem<pair<int, int>, long long> minItem = events.min();
+		events.popMin();
+		unordered_map<int, PIL>::iterator it = tree.find(minItem.item.second);
+		if (it == tree.end()) { 
+			tree[minItem.item.second] = make_pair(minItem.item.first, minItem.key);
+			for (auto i= graph.neighbours(minItem.item.second); i!=graph.endIterator(minItem.item.second); i++){
+				pair<int, int> newPair = make_pair(minItem.item.second, *i);
+				events.insert(newPair, minItem.key + graph.getCost(minItem.item.second, *i));
+			}
+		}
+	}
 }	
 
 
 int main() {
 	WDigraph edmontonGraph;
 	unordered_map<int, Point> points; 
-
 	readGraph("edmonton-roads-2.0.1.txt", edmontonGraph, points);
+
+	unordered_map<int, PIL> searchTree;
+	dijkstra(edmontonGraph, 29851800, searchTree);
 
 	return 0;
 }
