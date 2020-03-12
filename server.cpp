@@ -90,7 +90,7 @@ void readGraph (string filename, WDigraph& graph, unordered_map<int, Point>& poi
 			point1 = points[l];
 			point2 = points[m];
 			long long cost_of_edge = manhatten(point1, point2);
-			graph.addEdge(l, m, cost_of_edge);
+			graph.addEdge(m, l, cost_of_edge);
 		}
 	}
 	
@@ -110,6 +110,7 @@ void dijkstra(const WDigraph& graph, int startVertex, unordered_map<int, PIL>& t
 		unordered_map<int, PIL>::iterator it = tree.find(minItem.item.second);
 		if (it == tree.end()) { 
 			tree[minItem.item.second] = make_pair(minItem.item.first, minItem.key);
+			//tree[minItem.item.second] = minItem.item.first;
 			for (auto i= graph.neighbours(minItem.item.second); i!=graph.endIterator(minItem.item.second); i++){
 				pair<int, int> newPair = make_pair(minItem.item.second, *i);
 				events.insert(newPair, minItem.key + graph.getCost(minItem.item.second, *i));
@@ -125,7 +126,68 @@ int main() {
 	readGraph("edmonton-roads-2.0.1.txt", edmontonGraph, points);
 
 	unordered_map<int, PIL> searchTree;
-	dijkstra(edmontonGraph, 29851800, searchTree);
+
+	char mode = 'T';
+	
+	long long lat1, lat2, lon1, lon2;
+	long long current_dist1, current_dist2; 
+
+
+	cin >> mode;
+	if (mode == 'R') {
+		cin >> lat1 >> lon1 >> lat2 >> lon2;
+		unordered_map<int, Point>::iterator it1 = points.begin();
+		Point required_vertex1, required_vertex2;
+			
+		required_vertex1.lat = lat1;
+		required_vertex1.lon = lon1;
+
+		required_vertex2.lat = lat2;
+		required_vertex2.lon = lon2;
+
+		pair<int, Point> min_pair1;
+		pair<int, Point> min_pair2;
+
+		long long min_dist1 = manhatten(required_vertex1, it1->second);
+		long long min_dist2 = manhatten(required_vertex2, it1->second);
+
+		while ( it1!= points.end()) {
+			current_dist1 = manhatten(required_vertex1, it1->second);
+			current_dist2 = manhatten(required_vertex2, it1->second);
+			//cout << current_dist1 << endl;
+
+			if (current_dist1 < min_dist1){
+				min_dist1 = current_dist1;
+				min_pair1.first = it1->first;
+				min_pair1.second.lat = it1->second.lat;
+				min_pair1.second.lon = it1->second.lon;
+			}
+
+			if (current_dist2 < min_dist2){
+				min_dist2 = current_dist2;
+				min_pair2.first = it1->first;
+				min_pair2.second.lat = it1->second.lat;
+				min_pair2.second.lon = it1->second.lon;
+			}
+			it1++;
+		}
+		
+
+		dijkstra(edmontonGraph, min_pair2.first, searchTree);
+
+		int prevertex = min_pair1.first;
+		int counter = 1;
+		cout << "W " << points[prevertex].lat << " " << points[prevertex].lon << endl;
+		while (prevertex != min_pair2.first) {	
+			//cout << prevertex << endl;
+			prevertex = (searchTree[prevertex].first);
+		  	cout << "W " << points[prevertex].lat << " " << points[prevertex].lon << endl;
+		  	counter++;
+		}
+		cout << "E" << endl;
+		cout << "count: " << counter << endl;
+	}
+
 
 	return 0;
 }
