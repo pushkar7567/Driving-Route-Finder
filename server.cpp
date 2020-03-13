@@ -177,18 +177,24 @@ int main() {
 
 		int prevertex = min_pair1.first;
 		int counter = 1;
-		cout << "W " << points[prevertex].lat << " " << points[prevertex].lon << endl;
 		while (prevertex != min_pair2.first) {	
-			//cout << prevertex << endl;
+			
 			prevertex = (searchTree[prevertex].first);
-		  	cout << "W " << points[prevertex].lat << " " << points[prevertex].lon << endl;
 		  	counter++;
 		}
+		
+		cout << "N: " << counter << endl;
+
+		prevertex = min_pair1.first;
+		cout << "W " << points[prevertex].lat << " " << points[prevertex].lon << endl;
+		while (prevertex != min_pair2.first) {	
+			
+			prevertex = (searchTree[prevertex].first);
+		  	cout << "W " << points[prevertex].lat << " " << points[prevertex].lon << endl;
+		}
 		cout << "E" << endl;
-		cout << "count: " << counter << endl;
 	}
-
-
+	
 	return 0;
 }
 
